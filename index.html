@@ -1,0 +1,293 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>FECodeLab</title>
+
+<style>
+:root{
+  --bg:#0f172a;
+  --panel:#111827;
+  --text:#e5e7eb;
+  --accent:#22c55e;
+  --border:#1f2937;
+}
+
+*{
+  margin:0;
+  padding:0;
+  box-sizing:border-box;
+  font-family:Arial;
+}
+
+body{
+  background:var(--bg);
+  color:var(--text);
+  height:100vh;
+  display:flex;
+  flex-direction:column;
+}
+
+/* HEADER */
+header{
+  height:50px;
+  background:var(--panel);
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+  padding:0 10px;
+  border-bottom:1px solid var(--border);
+}
+
+.title{
+  font-weight:bold;
+  font-size:14px;
+}
+
+.actions{
+  display:flex;
+  gap:6px;
+}
+
+button{
+  background:var(--accent);
+  border:none;
+  color:white;
+  padding:6px 10px;
+  border-radius:6px;
+  cursor:pointer;
+  font-size:12px;
+}
+
+#status{
+  font-size:12px;
+  opacity:0.8;
+  margin-left:10px;
+}
+
+/* MAIN */
+.main{
+  flex:1;
+  display:flex;
+  overflow:hidden;
+}
+
+/* SIDEBAR */
+.sidebar{
+  width:70px;
+  background:#0b1220;
+  border-right:1px solid var(--border);
+  display:flex;
+  flex-direction:column;
+  align-items:center;
+  padding-top:10px;
+  gap:10px;
+}
+
+.icon{
+  width:40px;
+  height:40px;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  border-radius:10px;
+  background:var(--panel);
+  cursor:pointer;
+  font-size:12px;
+}
+
+.icon.active{
+  background:var(--accent);
+}
+
+/* EDITOR */
+.editor{
+  flex:1;
+  display:flex;
+  flex-direction:column;
+  background:var(--panel);
+}
+
+.tabs{
+  display:flex;
+  border-bottom:1px solid var(--border);
+}
+
+.tab{
+  flex:1;
+  text-align:center;
+  padding:8px;
+  font-size:12px;
+  cursor:pointer;
+  opacity:0.6;
+}
+
+.tab.active{
+  border-bottom:2px solid var(--accent);
+  opacity:1;
+}
+
+textarea{
+  flex:1;
+  background:var(--panel);
+  color:#22c55e;
+  border:none;
+  outline:none;
+  padding:10px;
+  font-size:13px;
+  display:none;
+}
+
+textarea.active{
+  display:block;
+}
+
+/* PREVIEW */
+.preview{
+  flex:1;
+  border-left:1px solid var(--border);
+  background:white;
+}
+
+iframe{
+  width:100%;
+  height:100%;
+  border:none;
+}
+</style>
+</head>
+
+<body>
+
+<header>
+  <div class="title">💻 FECodeLab <span id="status">Idle</span></div>
+
+  <div class="actions">
+    <button onclick="run()">▶ Run</button>
+    <button onclick="save()">💾 Save</button>
+    <button onclick="exportHTML()">📦 Export</button>
+  </div>
+</header>
+
+<div class="main">
+
+  <div class="sidebar">
+    <div class="icon active" onclick="openFile(0)">H</div>
+    <div class="icon" onclick="openFile(1)">C</div>
+    <div class="icon" onclick="openFile(2)">J</div>
+  </div>
+
+  <div class="editor">
+
+    <div class="tabs">
+      <div class="tab active" onclick="openFile(0)">HTML</div>
+      <div class="tab" onclick="openFile(1)">CSS</div>
+      <div class="tab" onclick="openFile(2)">JS</div>
+    </div>
+
+    <textarea id="html" class="active"><h1>Hello 👋</h1></textarea>
+    <textarea id="css">body{font-family:Arial}</textarea>
+    <textarea id="js">console.log("hi");</textarea>
+
+  </div>
+
+  <div class="preview">
+    <iframe id="out"></iframe>
+  </div>
+
+</div>
+
+<script>
+
+let tabs = document.querySelectorAll(".tab");
+let icons = document.querySelectorAll(".icon");
+let areas = document.querySelectorAll("textarea");
+let timer;
+
+function setStatus(text){
+  document.getElementById("status").innerText = text;
+}
+
+/* FILE SWITCH */
+function openFile(i){
+  tabs.forEach(t=>t.classList.remove("active"));
+  icons.forEach(ic=>ic.classList.remove("active"));
+  areas.forEach(a=>a.classList.remove("active"));
+
+  tabs[i].classList.add("active");
+  icons[i].classList.add("active");
+  areas[i].classList.add("active");
+}
+
+/* RUN */
+function run(){
+  let html = document.getElementById("html").value;
+  let css = "<style>"+document.getElementById("css").value+"</style>";
+  let js = "<script>"+document.getElementById("js").value+"<\/script>";
+
+  document.getElementById("out").srcdoc = html + css + js;
+}
+
+/* AUTO SAVE + STATUS */
+function autoSave(){
+  setStatus("Saving...");
+  clearTimeout(timer);
+
+  timer = setTimeout(()=>{
+    localStorage.setItem("html", html.value);
+    localStorage.setItem("css", css.value);
+    localStorage.setItem("js", js.value);
+
+    setStatus("Saved ✓");
+  }, 500);
+}
+
+/* MANUAL SAVE */
+function save(){
+  localStorage.setItem("html", html.value);
+  localStorage.setItem("css", css.value);
+  localStorage.setItem("js", js.value);
+
+  setStatus("Saved ✓");
+  alert("💾 Project tersimpan!");
+}
+
+/* LOAD */
+function load(){
+  html.value = localStorage.getItem("html") || "";
+  css.value = localStorage.getItem("css") || "";
+  js.value = localStorage.getItem("js") || "";
+}
+
+/* EXPORT */
+function exportHTML(){
+  let htmlCode = html.value;
+  let cssCode = "<style>"+css.value+"</style>";
+  let jsCode = "<script>"+js.value+"<\/script>";
+
+  let full = htmlCode + cssCode + jsCode;
+
+  let blob = new Blob([full], {type:"text/html"});
+  let a = document.createElement("a");
+  a.href = URL.createObjectURL(blob);
+  a.download = "project.html";
+  a.click();
+}
+
+/* EVENTS */
+areas.forEach(a=>{
+  a.addEventListener("input", ()=>{
+    run();
+    autoSave();
+  });
+});
+
+/* INIT */
+load();
+run();
+
+</script>
+
+</body>
+</html>
